@@ -1,0 +1,35 @@
+REPORT Z_MYSECOND.
+TABLES : EKKO,EKPO.
+
+SELECT-OPTIONS : S_PONUM for ekko-ebeln, S_ITEM for ekpo-ebelp, S_VENDOR for ekko-lifnr.
+
+
+TYPES : Begin of ty_TAB ,
+  EBELN type ekko-EBELN,
+  LIFNR type ekko-LIFNR,
+  BUKRS type ekko-BUKRS,
+  AEDAT type ekko-aedat,
+  BEDAT type EKKO-BEDAT,
+  MYFIELD type c,
+  END OF ty_tab.
+
+TYPES : Begin of tz_TAB ,
+  EBELN type ekpo-EBELN,
+  EBELP type ekpo-EBELP,
+  NETWR type ekpo-NETWR,
+  TXZ01 type ekpo-TXZ01,
+  END OF tz_tab.
+
+DATA : ITAB_ekko type TABLE OF ty_TAB, wa_itab type ty_TAB.
+DATA : ITAB_ekpo type TABLE OF tz_TAB, wz_itab type tz_TAB.
+
+SELECT * FROM ekko
+APPENDING CORRESPONDING FIELDS OF TABLE ITAB_ekko
+where ebeln in S_PONUM and lifnr in S_VENDOR.
+
+SELECT * FROM ekpo
+  APPENDING CORRESPONDING FIELDS OF TABLE ITAB_EKPO
+  FOR ALL ENTRIES IN ITAB_EKKO
+  WHERE ebeln = ITAB_EKKO-EBELN.
+
+BREAK-POINT.

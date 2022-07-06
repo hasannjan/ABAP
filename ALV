@@ -1,0 +1,90 @@
+*&---------------------------------------------------------------------*
+*& Report Z_MYFIRST
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT Z_MYFIRST.
+TABLES : EKKO,EKPO.
+
+*PARAMETERS : PONUM type ekko-ebeln.
+SELECT-OPTIONS : S_PONUM for ekko-ebeln, S_EBELP for ekpo-ebelp.
+
+TYPES : Begin of ty_TAB ,
+  EBELN type ekko-EBELN,
+  LIFNR type ekko-lifnr,
+  AEDAT type ekko-aedat,
+  ERNAM type EKKO-ERNAM,
+  BSART type EKKO-BSART,
+  EBELP type EKPO-EBELP,
+  WERKS type EKPO-WERKS,
+  LGORT type EKPO-LGORT,
+  MYFIELD type c,
+  END OF ty_tab.
+
+DATA : ITAB type TABLE OF ty_TAB, wa_itab type ty_TAB.
+
+*&---------------------------------------------------------------------*
+*& ALV_DECLEARATION
+*&---------------------------------------------------------------------*
+DATA:  final_fieldcat TYPE slis_t_fieldcat_alv,
+       wa_fieldcat    TYPE slis_fieldcat_alv,
+       is_layout      TYPE  slis_layout_alv.
+
+DATA: g_repid TYPE sy-repid.
+DATA: it_listheader TYPE slis_t_listheader,
+      wa_listheader TYPE slis_listheader.
+
+DATA:   gt_events     TYPE  slis_t_event,
+        gd_prntparams TYPE  slis_print_alv.
+
+
+
+
+
+
+
+
+SELECT * FROM ekko as A INNER JOIN ekpo as B on A~ebeln = B~ebeln
+APPENDING CORRESPONDING FIELDS OF TABLE itab
+where A~ebeln  IN S_PONUM AND b~EBELP IN S_EBELP.
+
+
+
+
+LOOP AT ITAB into wa_itab.
+
+if wa_itab-aedat LE '20020601'.
+wa_itab-myfield = 'X'.
+else.
+  wa_itab-myfield = 'Y'.
+  endif.
+
+modify ITAB index sy-tabix from wa_itab.
+
+  ENDLOOP.
+
+sort itab by ebeln ebelp ASCENDING.
+
+    wa_fieldcat-fieldname = 'EBELN'.wa_fieldcat-seltext_l = 'PO'.wa_fieldcat-key = 'X'.APPEND wa_fieldcat TO final_fieldcat.CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = 'EBELP'.wa_fieldcat-seltext_l = 'a'.wa_fieldcat-key = 'X'.APPEND wa_fieldcat TO final_fieldcat.CLEAR wa_fieldcat. "S 8000000938: Classification of 600507564 – Bela West
+    wa_fieldcat-fieldname = 'LIFNR'.wa_fieldcat-seltext_l = 's'.wa_fieldcat-key = 'X'.APPEND wa_fieldcat TO final_fieldcat.CLEAR wa_fieldcat."S 8000000938: Classification of 600507564 – Bela West
+    wa_fieldcat-fieldname = 'AEDAT'.wa_fieldcat-seltext_l = 'C'.APPEND wa_fieldcat TO final_fieldcat.CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = 'ERNAM'.wa_fieldcat-seltext_l = 'd'.APPEND wa_fieldcat TO final_fieldcat.CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = 'BSART'.wa_fieldcat-seltext_l = 'f'.APPEND wa_fieldcat TO final_fieldcat.CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = 'WERKS'.wa_fieldcat-seltext_l = 'f'.APPEND wa_fieldcat TO final_fieldcat.CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = 'LGORT'.wa_fieldcat-seltext_l = 'y'.APPEND wa_fieldcat TO final_fieldcat.CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = 'MYFIELD'.wa_fieldcat-seltext_l = 'ys'.APPEND wa_fieldcat TO final_fieldcat.CLEAR wa_fieldcat.
+
+
+ CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+      EXPORTING
+        it_fieldcat            = final_fieldcat
+        i_callback_program     = sy-cprog
+        is_layout              = is_layout
+        i_save                 = 'A'
+*       is_variant             = g_variant "it is used to display the alv as per the selected layout on screen
+      TABLES
+        t_outtab               = ITAB
+      EXCEPTIONS
+        program_error          = 1
+        OTHERS                 = 2.
